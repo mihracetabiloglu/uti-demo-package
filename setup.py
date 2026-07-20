@@ -4,10 +4,11 @@ setuptools.setup(
     name="uti-demo-package",
     version="0.0.1",
     author="MihraceTabiloğlu",
-    author_email="mihracetabiloglu@gmail.com",  # Kendi e-posta adresini de yazabilirsin
+    author_email="mihracetabiloglu@gmail.com",  
     description="UTI Demo Package Assignment",
     url="https://github.com/mihrace-saliha/uti-demo-package",
     license="MIT",
+    type="capsule",
     install_requires=["sdk", "opencv-python-headless"],
 
     classifiers=[
@@ -20,7 +21,7 @@ setuptools.setup(
         "novavision.package",
         "novavision.package.executors",
         "novavision.package.models",
-        "novavision.package.utils"
+        "novavision.package.util"
     ],
     package_dir={"novavision.package": "src"},
     python_requires=">=3.6"
