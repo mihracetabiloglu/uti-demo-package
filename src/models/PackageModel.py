@@ -2,22 +2,22 @@ from typing import Literal, Optional, Union
 from sdks.novavision.src.base.model import Package, Images, Inputs, Configs, Outputs, Response, Request, Config, Input, Output
 
 # --- GİRDİ VE ÇIKTI TİPLERİ ---
-class InputImage(Input):  # 1. executor için girdi (ham resim)
+class InputImage(Input):
     name: Literal["inputImage"] = "inputImage"
     value: Images
     type: Literal["Images"] = "Images"
 
-class OutputImage(Output):  # 1. executor için çıktı (temizlenmiş resim)
+class OutputImage(Output):
     name: Literal["outputImage"] = "outputImage"
     value: Images
     type: Literal["Images"] = "Images"
 
-class InputMetadata(Input):  # 2. Giriş (Aranacak Nesne Adı)
-    name: Literal["targetLabel"] = "targetLabel"
+class InputMetadata(Input):  
+    name: Literal["targetLabels"] = "targetLabels"  # 's' takısı düzeltildi (Component ile birebir eşleştirildi)
     value: str = "human"
     type: Literal["str"] = "str"
 
-class OutputLogs(Output):    # 2. Çıkış (Analiz Raporu/Yazı)
+class OutputLogs(Output):
     name: Literal["analyticsLog"] = "analyticsLog"
     value: str
     type: Literal["str"] = "str"
@@ -26,17 +26,17 @@ class OutputLogs(Output):    # 2. Çıkış (Analiz Raporu/Yazı)
 
 class GaussianBlur(Config):
     name: Literal["Gaussian"] = "Gaussian"
-    kernel_size: int   
-    sigma: float       
-    type: Literal["object"] = "object"  # 
+    kernel_size: int = 5
+    sigma: float = 1.0
+    type: Literal["object"] = "object"  
     field: Literal["option"] = "option"
     class Config:
         title = "GaussianBlur"
 
 class Canny(Config):
     name: Literal["Canny"] = "Canny"
-    threshold: int    
-    padding: bool      
+    threshold: int = 100
+    padding: bool = True
     type: Literal["object"] = "object"  
     field: Literal["option"] = "option"
     class Config:
@@ -49,6 +49,7 @@ class FilterType(Config):
     field: Literal["dropdownlist"] = "dropdownlist"
     class Config:
         title = "Filtre Seçimi"
+        schema_extra = {"target": "value"}
 
 class ProcessorConfigs(Configs):
     filtertype: FilterType
@@ -75,41 +76,48 @@ class FrameProcessorExecutor(Config):
     field: Literal["option"] = "option"
     class Config:
         title = "FrameProcessorExecutor"
-        schema_extra = {"target": {"value": 0}}
+        schema_extra = {"target": {"value": "configs"}}
 
 
 # ----------- 2. EXECUTOR (TRACKER) ---------
 
 class YOLOFields(Config):
     name: Literal["YOLOv8"] = "YOLOv8"
-    modelPath: str
-    confidence: float
+    modelPath: str = "yolov8n.pt"
+    confidence: float = 0.5
     type: Literal["object"] = "object"
     field: Literal["option"] = "option"
+    class Config:
+        title = "YOLOv8"
 
 class HaarFields(Config):
     name: Literal["HaarCascade"] = "HaarCascade"
-    cascadeFile: str
-    scaleFactor: float
+    cascadeFile: str = "haarcascade_frontalface_default.xml"
+    scaleFactor: float = 1.1
     type: Literal["object"] = "object"
     field: Literal["option"] = "option"
+    class Config:
+        title = "HaarCascade"
 
 class TrackerConfig(Config):
     name: Literal["TrackerConfig"] = "TrackerConfig"
     value: Union[YOLOFields, HaarFields]
     type: Literal["object"] = "object"
     field: Literal["dropdownlist"] = "dropdownlist"
+    class Config:
+        title = "Model Tipi"
+        schema_extra = {"target": "value"}
 
 class TrackerConfigs(Configs):
     modelType: TrackerConfig
 
 class TrackerInputs(Inputs):
     inputImage: InputImage
-    targetLabels: InputMetadata # 2. Input
+    targetLabels: InputMetadata
 
 class TrackerOutputs(Outputs):
     outputImage: OutputImage
-    analyticsLog: OutputLogs # 2. Output
+    analyticsLog: OutputLogs
 
 class TrackerExecutorRequest(Request):
     inputs: Optional[TrackerInputs]
@@ -127,15 +135,13 @@ class IntrusionTrackerExecutor(Config):
     field: Literal["option"] = "option"
     class Config:
         title = "IntrusionTrackerExecutor"
-        schema_extra = {"target": {"value": 0}}
+        schema_extra = {"target": {"value": "configs"}}
 
-    
 
-# Ana paket
+# --- ANA PAKET ---
 
 class ConfigExecutor(Config):
     name: Literal["ConfigExecutor"] = "ConfigExecutor"
-    # KURAL: En az 2 adet executor'ı ana menüye bağlıyoruz:
     value: Union[FrameProcessorExecutor, IntrusionTrackerExecutor] 
     type: Literal["executor"] = "executor"
     field: Literal["dependentDropdownlist"] = "dependentDropdownlist"
