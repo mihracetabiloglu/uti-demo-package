@@ -6,14 +6,14 @@ def build_response(context) -> dict:
     bir response paketi olusturur.
     """
     
-    # Request yapısındaki executor type'ını belirle
-    executor_config = context.request.model.configs.executor.value
-    executor_name = executor_config.__class__.__name__
+    # Executor sınıf adını al
+    executor_instance = context.request.model.configs.executor.value
+    executor_class_name = executor_instance.__class__.__name__
     
     outputs_dict = {}
     
-    if executor_name == "FrameProcessorExecutor":
-        # Frame Processor Executor çıktısı
+    # FrameProcessorExecutor veya IntrusionTrackerExecutor kontrolü
+    if executor_class_name == "FrameProcessorExecutor":
         outputs_dict = {
             "outputImage": {
                 "name": "outputImage",
@@ -21,8 +21,7 @@ def build_response(context) -> dict:
                 "type": "object"
             }
         }
-    elif executor_name == "IntrusionTrackerExecutor":
-        # Intrusion Tracker Executor çıktısı
+    elif executor_class_name == "IntrusionTrackerExecutor":
         outputs_dict = {
             "outputImage": {
                 "name": "outputImage",
