@@ -7,11 +7,12 @@ def build_response(context) -> dict:
     """
     
     # Request yapısındaki executor type'ını belirle
-    executor_type = context.request.model.configs.executor.value.__class__.__name__
+    executor_config = context.request.model.configs.executor.value
+    executor_name = executor_config.__class__.__name__
     
     outputs_dict = {}
     
-    if "FrameProcessor" in executor_type:
+    if executor_name == "FrameProcessorExecutor":
         # Frame Processor Executor çıktısı
         outputs_dict = {
             "outputImage": {
@@ -20,7 +21,7 @@ def build_response(context) -> dict:
                 "type": "object"
             }
         }
-    elif "IntrusionTracker" in executor_type:
+    elif executor_name == "IntrusionTrackerExecutor":
         # Intrusion Tracker Executor çıktısı
         outputs_dict = {
             "outputImage": {
