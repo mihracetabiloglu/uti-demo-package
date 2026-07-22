@@ -1,37 +1,38 @@
 from components.Package.src.models.PackageModel import PackageModel
 
-def build_response(context) -> PackageModel:
+def build_response(context) -> dict:
     """
     Executor icindeki verileri toplar ve PackageModel semasina uygun 
     bir response paketi olusturur.
     """
-  
-    executor_name = context.request.model.configs.executor.value.__class__.__name__
+    # Executor sınıf adını al
+    executor_instance = context.request.model.configs.executor.value
+    executor_class_name = executor_instance.__class__.__name__
     
     outputs_dict = {}
     
-    if "FrameProcessorExecutor" in executor_name:
+    # FrameProcessorExecutor veya IntrusionTrackerExecutor kontrolü
+    if executor_class_name == "FrameProcessorExecutor":
         outputs_dict = {
             "outputImage": {
                 "name": "outputImage",
                 "value": getattr(context, "outputImage", None),
-                "type": "Images"
+                "type": "object"
             }
         }
-    elif "IntrusionTrackerExecutor" in executor_name:
+    elif executor_class_name == "IntrusionTrackerExecutor":
         outputs_dict = {
             "outputImage": {
                 "name": "outputImage",
                 "value": getattr(context, "outputImage", None),
-                "type": "Images"
+                "type": "object"
             },
             "analyticsLog": {
                 "name": "analyticsLog",
                 "value": getattr(context, "analyticsLog", ""),
-                "type": "str"
+                "type": "string"
             }
         }
-        
     
     response_data = {
         "outputs": outputs_dict
