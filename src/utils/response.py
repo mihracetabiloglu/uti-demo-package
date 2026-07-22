@@ -1,6 +1,6 @@
 from components.Package.src.models.PackageModel import PackageModel
 
-def build_response(context) -> PackageModel:
+def build_response(context) -> dict:
     """
     Executor icindeki verileri toplar ve PackageModel semasina uygun 
     bir response paketi olusturur.
