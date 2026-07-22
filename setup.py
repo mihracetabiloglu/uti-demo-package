@@ -19,9 +19,11 @@ setuptools.setup(
 
     packages=[
         "novavision.package",
+        "novavision.package.apps",
+        "novavision.package.resources",
         "novavision.package.executors",
         "novavision.package.models",
-        "novavision.package.util"
+        "novavision.package.utils"
     ],
     package_dir={"novavision.package": "src"},
     python_requires=">=3.6"

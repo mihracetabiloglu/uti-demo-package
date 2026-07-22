@@ -1,150 +1,234 @@
-from typing import Literal, Optional, Union
-from sdks.novavision.src.base.model import Package, Images, Inputs, Configs, Outputs, Response, Request, Config, Input, Output
+from pydantic import Field
+from typing import List, Union, Literal, Optional
+from sdks.novavision.src.base.model import Package, Config, Inputs, Configs, Outputs, Output, Input, Image, Request, Response
 
 # ==========================================
-# 1. GİRDİ VE ÇIKTI TİPLERİ (SOCKETS)
+# 1. FRAME PROCESSOR EXECUTOR - INPUTS
 # ==========================================
-
-class InputImage(Input):
+class ProcessorInputImage(Input):
     name: Literal["inputImage"] = "inputImage"
-    value: Images
-    type: Literal["Images"] = "Images"
+    value: Union[List[Image], Image]
+    type: str = "object"
+    class Config:
+        title = "Input Image"
 
 
-class OutputImage(Output):
-    name: Literal["outputImage"] = "outputImage"
-    value: Images
-    type: Literal["Images"] = "Images"
-
-
-class InputMetadata(Input):
-    name: Literal["targetLabels"] = "targetLabels"
-    value: str = "human"
-    type: Literal["str"] = "str"
-
-
-class OutputLogs(Output):
-    name: Literal["analyticsLog"] = "analyticsLog"
-    value: str = ""
-    type: Literal["str"] = "str"
+class FrameProcessorInputs(Inputs):
+    inputImage: ProcessorInputImage
 
 
 # ==========================================
-# 2. FRAME PROCESSOR EXECUTOR
+# 2. FRAME PROCESSOR EXECUTOR - CONFIGS
 # ==========================================
-
 class GaussianBlur(Config):
     name: Literal["Gaussian"] = "Gaussian"
     kernel_size: int = 5
     sigma: float = 1.0
-    value: None = None          # <-- EKLENDİ (HATA ÇÖZÜLDÜ)
-    type: Literal["object"] = "object"
+    value: Literal["Gaussian"] = "Gaussian"
+    type: Literal["string"] = "string"
     field: Literal["option"] = "option"
-
     class Config:
-        title = "GaussianBlur"
+        title = "Gaussian Blur"
 
 
 class Canny(Config):
     name: Literal["Canny"] = "Canny"
     threshold: int = 100
     padding: bool = True
-    value: None = None          # <-- EKLENDİ (HATA ÇÖZÜLDÜ)
-    type: Literal["object"] = "object"
+    value: Literal["Canny"] = "Canny"
+    type: Literal["string"] = "string"
     field: Literal["option"] = "option"
-
     class Config:
-        title = "Canny"
+        title = "Canny Edge Detection"
 
 
 class FilterType(Config):
     name: Literal["FilterType"] = "FilterType"
-    value: Union[GaussianBlur, Canny] = GaussianBlur()
+    value: Union[GaussianBlur, Canny] = Field(default_factory=GaussianBlur)
     type: Literal["object"] = "object"
-    field: Literal["dropdownlist"] = "dropdownlist"
-
+    field: Literal["dependentDropdownlist"] = "dependentDropdownlist"
     class Config:
-        title = "Filtre Seçimi"
-        schema_extra = {"target": "value"}
+        title = "Filter Selection"
 
 
-class ProcessorConfigs(Configs):
-    filtertype: FilterType = FilterType()
-
-
-class ProcessorConfigsInput(Inputs):
-    inputImage: InputImage = InputImage()
-
-
-class ProcessorConfigsOutput(Outputs):
-    outputImage: OutputImage = OutputImage()
-
-
-class ProcessorExecutorRequest(Request):
-    inputs: Optional[ProcessorConfigsInput] = ProcessorConfigsInput()
-    configs: ProcessorConfigs = ProcessorConfigs()
-    # schema_extra YOK (inputs ve configs birlikte gelsin)
-
-
-class ProcessorExecutorResponse(Response):
-    outputs: ProcessorConfigsOutput = ProcessorConfigsOutput()
-
-
-class FrameProcessorExecutor(Config):
-    name: Literal["FrameProcessorExecutor"] = "FrameProcessorExecutor"
-    value: Union[ProcessorExecutorRequest, ProcessorExecutorResponse] = ProcessorExecutorRequest()
-    type: Literal["object"] = "object"
-    field: Literal["option"] = "option"
-
-    class Config:
-        title = "FrameProcessorExecutor"
-        schema_extra = {"target": {"value": 0}}  # 0: Request seçili
+class FrameProcessorConfigs(Configs):
+    filterType: FilterType
 
 
 # ==========================================
-# 3. INTRUSION TRACKER EXECUTOR
+# 3. FRAME PROCESSOR EXECUTOR - OUTPUTS
 # ==========================================
+class ProcessorOutputImage(Output):
+    name: Literal["outputImage"] = "outputImage"
+    value: Union[List[Image], Image]
+    type: str = "object"
+    class Config:
+        title = "Output Image"
 
-class YOLOFields(Config):
+
+class FrameProcessorOutputs(Outputs):
+    outputImage: ProcessorOutputImage
+
+
+# ==========================================
+# 4. FRAME PROCESSOR EXECUTOR - REQUEST/RESPONSE
+# ==========================================
+class FrameProcessorRequest(Request):
+    inputs: Optional[FrameProcessorInputs] = None
+    configs: FrameProcessorConfigs
+    class Config:
+        json_schema_extra = {"target": "configs"}
+
+
+class FrameProcessorResponse(Response):
+    outputs: FrameProcessorOutputs
+
+
+# ==========================================
+# 5. INTRUSION TRACKER EXECUTOR - INPUTS
+# ==========================================
+class TrackerInputImage(Input):
+    name: Literal["inputImage"] = "inputImage"
+    value: Union[List[Image], Image]
+    type: str = "object"
+    class Config:
+        title = "Input Image"
+
+
+class IntrusionTrackerInputs(Inputs):
+    inputImage: TrackerInputImage
+
+
+# ==========================================
+# 6. INTRUSION TRACKER EXECUTOR - CONFIGS
+# ==========================================
+class YOLOv8(Config):
     name: Literal["YOLOv8"] = "YOLOv8"
     modelPath: str = "yolov8n.pt"
-    confidence: float = 0.5
-    type: Literal["object"] = "object"
+    confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+    value: Literal["YOLOv8"] = "YOLOv8"
+    type: Literal["string"] = "string"
     field: Literal["option"] = "option"
-
     class Config:
-        title = "YOLOv8"
+        title = "YOLOv8 Model"
 
 
-class HaarFields(Config):
+class HaarCascade(Config):
     name: Literal["HaarCascade"] = "HaarCascade"
-    cascadeFile: str = "haarcascade_frontalface_default.xml"
+    cascadeFile: str = "haarcascade.xml"
     scaleFactor: float = 1.1
+    value: Literal["HaarCascade"] = "HaarCascade"
+    type: Literal["string"] = "string"
+    field: Literal["option"] = "option"
+    class Config:
+        title = "Haar Cascade Model"
+
+
+class ModelType(Config):
+    name: Literal["ModelType"] = "ModelType"
+    value: Union[YOLOv8, HaarCascade] = Field(default_factory=YOLOv8)
+    type: Literal["object"] = "object"
+    field: Literal["dependentDropdownlist"] = "dependentDropdownlist"
+    class Config:
+        title = "Model Selection"
+
+
+class TargetLabels(Config):
+    name: Literal["TargetLabels"] = "TargetLabels"
+    value: str = "human"
+    type: Literal["string"] = "string"
+    field: Literal["textInput"] = "textInput"
+    class Config:
+        title = "Target Labels"
+
+
+class IntrusionTrackerConfigs(Configs):
+    modelType: ModelType
+    targetLabels: TargetLabels
+
+
+# ==========================================
+# 7. INTRUSION TRACKER EXECUTOR - OUTPUTS
+# ==========================================
+class TrackerOutputImage(Output):
+    name: Literal["outputImage"] = "outputImage"
+    value: Union[List[Image], Image]
+    type: str = "object"
+    class Config:
+        title = "Output Image"
+
+
+class AnalyticsLog(Output):
+    name: Literal["analyticsLog"] = "analyticsLog"
+    value: str = ""
+    type: str = "string"
+    class Config:
+        title = "Analytics Log"
+
+
+class IntrusionTrackerOutputs(Outputs):
+    outputImage: TrackerOutputImage
+    analyticsLog: AnalyticsLog
+
+
+# ==========================================
+# 8. INTRUSION TRACKER EXECUTOR - REQUEST/RESPONSE
+# ==========================================
+class IntrusionTrackerRequest(Request):
+    inputs: Optional[IntrusionTrackerInputs] = None
+    configs: IntrusionTrackerConfigs
+    class Config:
+        json_schema_extra = {"target": "configs"}
+
+
+class IntrusionTrackerResponse(Response):
+    outputs: IntrusionTrackerOutputs
+
+
+# ==========================================
+# 9. EXECUTORS SELECTION
+# ==========================================
+class FrameProcessorExecutor(Config):
+    name: Literal["FrameProcessorExecutor"] = "FrameProcessorExecutor"
+    value: Union[FrameProcessorRequest, FrameProcessorResponse]
     type: Literal["object"] = "object"
     field: Literal["option"] = "option"
-
     class Config:
-        title = "HaarCascade"
+        title = "Frame Processor"
+        json_schema_extra = {"target": {"value": 0}}
 
 
-class TrackerConfig(Config):
-    name: Literal["TrackerConfig"] = "TrackerConfig"
-    value: Union[YOLOFields, HaarFields] = YOLOFields()
+class IntrusionTrackerExecutor(Config):
+    name: Literal["IntrusionTrackerExecutor"] = "IntrusionTrackerExecutor"
+    value: Union[IntrusionTrackerRequest, IntrusionTrackerResponse]
     type: Literal["object"] = "object"
-    field: Literal["dropdownlist"] = "dropdownlist"
-
+    field: Literal["option"] = "option"
     class Config:
-        title = "Model Tipi"
-        schema_extra = {"target": "value"}
+        title = "Intrusion Tracker"
+        json_schema_extra = {"target": {"value": 0}}
 
 
-class TrackerConfigs(Configs):
-    modelType: TrackerConfig = TrackerConfig()
+class ConfigExecutor(Config):
+    name: Literal["ConfigExecutor"] = "ConfigExecutor"
+    value: Union[FrameProcessorExecutor, IntrusionTrackerExecutor]
+    type: Literal["executor"] = "executor"
+    field: Literal["dependentDropdownlist"] = "dependentDropdownlist"
+    class Config:
+        title = "Select Task"
 
 
-class TrackerInputs(Inputs):
-    inputImage: InputImage = InputImage()
-    targetLabels: InputMetadata = InputMetadata()
+# ==========================================
+# 10. PACKAGE MODEL
+# ==========================================
+class PackageConfigs(Configs):
+    executor: ConfigExecutor
+
+
+class PackageModel(Package):
+    configs: PackageConfigs
+    type: Literal["component"] = "component"
+    name: Literal["DemoPackage"] = "DemoPackage"
+    uID: str = "1331112"
 
 
 class TrackerOutputs(Outputs):
