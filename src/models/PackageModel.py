@@ -1,28 +1,66 @@
-from typing import Literal, Optional, Union
-from sdks.novavision.src.base.model import Package, Images, Inputs, Configs, Outputs, Response, Request, Config, Input, Output
+from pydantic import Field, validator
+from typing import List, Optional, Union, Literal
+from sdks.novavision.src.base.model import Package, Image, Inputs, Configs, Outputs, Response, Request, Output, Input, Config
 
-# --- GİRDİ VE ÇIKTI TİPLERİ ---
+# ==========================================
+# 1. GİRDİ VE ÇIKTI TİPLERİ (SOCKETS)
+# ==========================================
+
 class InputImage(Input):
     name: Literal["inputImage"] = "inputImage"
-    value: Images
-    type: Literal["Images"] = "Images"
+    value: Union[List[Image], Image]
+    type: str = "object"
+
+    @validator("type", pre=True, always=True)
+    def set_type_based_on_value(cls, value, values):
+        val = values.get('value')
+        if isinstance(val, Image):
+            return "object"
+        elif isinstance(val, list):
+            return "list"
+
+    class Config:
+        title = "Image"
+
 
 class OutputImage(Output):
     name: Literal["outputImage"] = "outputImage"
-    value: Images
-    type: Literal["Images"] = "Images"
+    value: Union[List[Image], Image]
+    type: str = "object"
+
+    @validator("type", pre=True, always=True)
+    def set_type_based_on_value(cls, value, values):
+        val = values.get('value')
+        if isinstance(val, Image):
+            return "object"
+        elif isinstance(val, list):
+            return "list"
+
+    class Config:
+        title = "Image"
+
 
 class InputMetadata(Input):  
-    name: Literal["targetLabels"] = "targetLabels"  # 's' takısı düzeltildi (Component ile birebir eşleştirildi)
+    name: Literal["targetLabels"] = "targetLabels"
     value: str = "human"
     type: Literal["str"] = "str"
+
+    class Config:
+        title = "Target Labels"
+
 
 class OutputLogs(Output):
     name: Literal["analyticsLog"] = "analyticsLog"
     value: str
     type: Literal["str"] = "str"
 
-# --- 1. EXECUTOR (FRAME PROCESSOR) ---
+    class Config:
+        title = "Analytics Log"
+
+
+# ==========================================
+# 2. FRAME PROCESSOR EXECUTOR
+# ==========================================
 
 class GaussianBlur(Config):
     name: Literal["Gaussian"] = "Gaussian"
@@ -30,8 +68,10 @@ class GaussianBlur(Config):
     sigma: float = 1.0
     type: Literal["object"] = "object"  
     field: Literal["option"] = "option"
+
     class Config:
         title = "GaussianBlur"
+
 
 class Canny(Config):
     name: Literal["Canny"] = "Canny"
@@ -39,47 +79,68 @@ class Canny(Config):
     padding: bool = True
     type: Literal["object"] = "object"  
     field: Literal["option"] = "option"
+
     class Config:
         title = "Canny"
+
 
 class FilterType(Config):
     name: Literal["FilterType"] = "FilterType"
     value: Union[GaussianBlur, Canny]
     type: Literal["object"] = "object"
     field: Literal["dropdownlist"] = "dropdownlist"
+
     class Config:
         title = "Filtre Seçimi"
-        schema_extra = {"target": "value"}
+        json_schema_extra = {
+            "target": "value"
+        }
+
 
 class ProcessorConfigs(Configs):
-    filtertype: FilterType
+    filterType: FilterType
+
 
 class ProcessorConfigsInput(Inputs):
     inputImage: InputImage
 
+
 class ProcessorConfigsOutput(Outputs):
     outputImage: OutputImage
 
+
 class ProcessorExecutorRequest(Request):
-    inputs: ProcessorConfigsInput
+    inputs: Optional[ProcessorConfigsInput]
     configs: ProcessorConfigs
+
     class Config:
-        schema_extra = {"target": "configs"}
+        json_schema_extra = {
+            "target": "configs"
+        }
+
 
 class ProcessorExecutorResponse(Response):
     outputs: ProcessorConfigsOutput
+
 
 class FrameProcessorExecutor(Config):
     name: Literal["FrameProcessorExecutor"] = "FrameProcessorExecutor"
     value: Union[ProcessorExecutorRequest, ProcessorExecutorResponse]
     type: Literal["object"] = "object"
     field: Literal["option"] = "option"
+
     class Config:
         title = "FrameProcessorExecutor"
-        schema_extra = {"target": {"value": "configs"}}
+        json_schema_extra = {
+            "target": {
+                "value": 0
+            }
+        }
 
 
-# ----------- 2. EXECUTOR (TRACKER) ---------
+# ==========================================
+# 3. INTRUSION TRACKER EXECUTOR
+# ==========================================
 
 class YOLOFields(Config):
     name: Literal["YOLOv8"] = "YOLOv8"
@@ -87,8 +148,10 @@ class YOLOFields(Config):
     confidence: float = 0.5
     type: Literal["object"] = "object"
     field: Literal["option"] = "option"
+
     class Config:
         title = "YOLOv8"
+
 
 class HaarFields(Config):
     name: Literal["HaarCascade"] = "HaarCascade"
@@ -96,64 +159,89 @@ class HaarFields(Config):
     scaleFactor: float = 1.1
     type: Literal["object"] = "object"
     field: Literal["option"] = "option"
+
     class Config:
         title = "HaarCascade"
+
 
 class TrackerConfig(Config):
     name: Literal["TrackerConfig"] = "TrackerConfig"
     value: Union[YOLOFields, HaarFields]
     type: Literal["object"] = "object"
     field: Literal["dropdownlist"] = "dropdownlist"
+
     class Config:
         title = "Model Tipi"
-        schema_extra = {"target": "value"}
+        json_schema_extra = {
+            "target": "value"
+        }
+
 
 class TrackerConfigs(Configs):
     modelType: TrackerConfig
+
 
 class TrackerInputs(Inputs):
     inputImage: InputImage
     targetLabels: InputMetadata
 
+
 class TrackerOutputs(Outputs):
     outputImage: OutputImage
     analyticsLog: OutputLogs
 
+
 class TrackerExecutorRequest(Request):
     inputs: Optional[TrackerInputs]
     configs: TrackerConfigs
+
     class Config:
-        schema_extra = {"target": "configs"}
+        json_schema_extra = {
+            "target": "configs"
+        }
+
 
 class TrackerExecutorResponse(Response):
     outputs: TrackerOutputs
+
 
 class IntrusionTrackerExecutor(Config):
     name: Literal["IntrusionTrackerExecutor"] = "IntrusionTrackerExecutor"
     value: Union[TrackerExecutorRequest, TrackerExecutorResponse]
     type: Literal["object"] = "object"
     field: Literal["option"] = "option"
+
     class Config:
         title = "IntrusionTrackerExecutor"
-        schema_extra = {"target": {"value": "configs"}}
+        json_schema_extra = {
+            "target": {
+                "value": 0
+            }
+        }
 
 
-# --- ANA PAKET ---
+# ==========================================
+# 4. ANA PAKET VE EXECUTOR SEÇİMİ
+# ==========================================
 
 class ConfigExecutor(Config):
     name: Literal["ConfigExecutor"] = "ConfigExecutor"
-    value: Union[FrameProcessorExecutor, IntrusionTrackerExecutor] 
+    value: Union[FrameProcessorExecutor, IntrusionTrackerExecutor]
     type: Literal["executor"] = "executor"
     field: Literal["dependentDropdownlist"] = "dependentDropdownlist"
+
     class Config:
         title = "Task"
-        schema_extra = {"target": "value"}
+        json_schema_extra = {
+            "target": "value"
+        }
+
 
 class PackageConfigs(Configs):
     executor: ConfigExecutor
 
+
 class PackageModel(Package):
     configs: PackageConfigs
-    type: Literal["capsule"] = "capsule"
-    name: Literal["SmartGuardPackage"] = "SmartGuardPackage"
-    uID: str = "1331112"
+    type: Literal["component"] = "component"
+    name: Literal["Package"] = "Package"
