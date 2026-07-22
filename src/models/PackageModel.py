@@ -10,15 +10,18 @@ class InputImage(Input):
     value: Images
     type: Literal["Images"] = "Images"
 
+
 class OutputImage(Output):
     name: Literal["outputImage"] = "outputImage"
     value: Images
     type: Literal["Images"] = "Images"
 
+
 class InputMetadata(Input):
     name: Literal["targetLabels"] = "targetLabels"
     value: str = "human"
     type: Literal["str"] = "str"
+
 
 class OutputLogs(Output):
     name: Literal["analyticsLog"] = "analyticsLog"
@@ -34,56 +37,68 @@ class GaussianBlur(Config):
     name: Literal["Gaussian"] = "Gaussian"
     kernel_size: int = 5
     sigma: float = 1.0
-    value: None = None          # <-- EKLENDİ, UI'da görünmez
+    value: None = None          # <-- EKLENDİ (HATA ÇÖZÜLDÜ)
     type: Literal["object"] = "object"
     field: Literal["option"] = "option"
+
     class Config:
         title = "GaussianBlur"
+
 
 class Canny(Config):
     name: Literal["Canny"] = "Canny"
     threshold: int = 100
     padding: bool = True
-    value: None = None          # <-- EKLENDİ
+    value: None = None          # <-- EKLENDİ (HATA ÇÖZÜLDÜ)
     type: Literal["object"] = "object"
     field: Literal["option"] = "option"
+
     class Config:
         title = "Canny"
+
 
 class FilterType(Config):
     name: Literal["FilterType"] = "FilterType"
     value: Union[GaussianBlur, Canny] = GaussianBlur()
     type: Literal["object"] = "object"
     field: Literal["dropdownlist"] = "dropdownlist"
+
     class Config:
         title = "Filtre Seçimi"
-        schema_extra = {"target": "value"}   # dropdownlist için gerekli
+        schema_extra = {"target": "value"}
+
 
 class ProcessorConfigs(Configs):
     filtertype: FilterType = FilterType()
 
+
 class ProcessorConfigsInput(Inputs):
     inputImage: InputImage = InputImage()
+
 
 class ProcessorConfigsOutput(Outputs):
     outputImage: OutputImage = OutputImage()
 
+
 class ProcessorExecutorRequest(Request):
     inputs: Optional[ProcessorConfigsInput] = ProcessorConfigsInput()
     configs: ProcessorConfigs = ProcessorConfigs()
-    # schema_extra YOK (böylece inputs ve configs birlikte render olur)
+    # schema_extra YOK (inputs ve configs birlikte gelsin)
+
 
 class ProcessorExecutorResponse(Response):
     outputs: ProcessorConfigsOutput = ProcessorConfigsOutput()
+
 
 class FrameProcessorExecutor(Config):
     name: Literal["FrameProcessorExecutor"] = "FrameProcessorExecutor"
     value: Union[ProcessorExecutorRequest, ProcessorExecutorResponse] = ProcessorExecutorRequest()
     type: Literal["object"] = "object"
     field: Literal["option"] = "option"
+
     class Config:
         title = "FrameProcessorExecutor"
-        schema_extra = {"target": {"value": 0}}   # 0. eleman (Request) seçili
+        schema_extra = {"target": {"value": 0}}  # 0: Request seçili
 
 
 # ==========================================
@@ -96,8 +111,10 @@ class YOLOFields(Config):
     confidence: float = 0.5
     type: Literal["object"] = "object"
     field: Literal["option"] = "option"
+
     class Config:
         title = "YOLOv8"
+
 
 class HaarFields(Config):
     name: Literal["HaarCascade"] = "HaarCascade"
@@ -105,45 +122,55 @@ class HaarFields(Config):
     scaleFactor: float = 1.1
     type: Literal["object"] = "object"
     field: Literal["option"] = "option"
+
     class Config:
         title = "HaarCascade"
+
 
 class TrackerConfig(Config):
     name: Literal["TrackerConfig"] = "TrackerConfig"
     value: Union[YOLOFields, HaarFields] = YOLOFields()
     type: Literal["object"] = "object"
     field: Literal["dropdownlist"] = "dropdownlist"
+
     class Config:
         title = "Model Tipi"
         schema_extra = {"target": "value"}
 
+
 class TrackerConfigs(Configs):
     modelType: TrackerConfig = TrackerConfig()
+
 
 class TrackerInputs(Inputs):
     inputImage: InputImage = InputImage()
     targetLabels: InputMetadata = InputMetadata()
 
+
 class TrackerOutputs(Outputs):
     outputImage: OutputImage = OutputImage()
     analyticsLog: OutputLogs = OutputLogs()
 
+
 class TrackerExecutorRequest(Request):
     inputs: Optional[TrackerInputs] = TrackerInputs()
     configs: TrackerConfigs = TrackerConfigs()
-    # schema_extra YOK
+    # schema_extra YOK (inputs ve configs birlikte gelsin)
+
 
 class TrackerExecutorResponse(Response):
     outputs: TrackerOutputs = TrackerOutputs()
+
 
 class IntrusionTrackerExecutor(Config):
     name: Literal["IntrusionTrackerExecutor"] = "IntrusionTrackerExecutor"
     value: Union[TrackerExecutorRequest, TrackerExecutorResponse] = TrackerExecutorRequest()
     type: Literal["object"] = "object"
     field: Literal["option"] = "option"
+
     class Config:
         title = "IntrusionTrackerExecutor"
-        schema_extra = {"target": {"value": 0}}   # 0. eleman (Request) seçili
+        schema_extra = {"target": {"value": 0}}  # 0: Request seçili
 
 
 # ==========================================
@@ -155,12 +182,15 @@ class ConfigExecutor(Config):
     value: Union[FrameProcessorExecutor, IntrusionTrackerExecutor] = FrameProcessorExecutor()
     type: Literal["executor"] = "executor"
     field: Literal["dependentDropdownlist"] = "dependentDropdownlist"
+
     class Config:
         title = "Task"
         # schema_extra KESİNLİKLE YOK (dokümana uygun)
 
+
 class PackageConfigs(Configs):
     executor: ConfigExecutor = ConfigExecutor()
+
 
 class PackageModel(Package):
     configs: PackageConfigs = PackageConfigs()
