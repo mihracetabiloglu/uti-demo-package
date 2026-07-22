@@ -61,7 +61,7 @@ class ProcessorConfigsOutput(Outputs):
     outputImage: OutputImage
 
 class ProcessorExecutorRequest(Request):
-    inputs: Optional[ProcessorConfigsInput]
+    inputs: ProcessorConfigsInput
     configs: ProcessorConfigs
     class Config:
         schema_extra = {"target": "configs"}
