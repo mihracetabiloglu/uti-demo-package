@@ -44,7 +44,7 @@ class Canny(Config):
 
 class FilterType(Config):
     name: Literal["FilterType"] = "FilterType"
-    value: Union[GaussianBlur, Canny] = Field(default_factory=GaussianBlur)
+    value: Union[GaussianBlur, Canny] = Field(default=None)
     type: Literal["object"] = "object"
     field: Literal["dependentDropdownlist"] = "dependentDropdownlist"
     class Config:
@@ -52,7 +52,7 @@ class FilterType(Config):
 
 
 class FrameProcessorConfigs(Configs):
-    filterType: FilterType
+    filterType: FilterType = Field(default_factory=FilterType)
 
 
 # ==========================================
