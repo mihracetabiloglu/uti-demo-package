@@ -1,41 +1,52 @@
-from components.Package.src.models.PackageModel import PackageModel
+from sdks.novavision.src.helper.package import PackageHelper
 
-def build_response(context) -> dict:
-    """
-    Executor icindeki verileri toplar ve PackageModel semasina uygun 
-    bir response paketi olusturur.
-    """
-    # Executor sınıf adını al
-    executor_instance = context.request.model.configs.executor.value
-    executor_class_name = executor_instance.__class__.__name__
+from components.DemoPackage.src.models.PackageModel import (
+    PackageModel,
+    PackageConfigs,
+    ConfigExecutor,
+    FrameProcessorExecutor,
+    FrameProcessorExecutorResponse,
+    FrameProcessorExecutorOutputs,
+    ProcessorOutputImage,
+    IntrusionTrackerExecutor,
+    IntrusionTrackerExecutorResponse,
+    IntrusionTrackerExecutorOutputs,
+    IntrusionTrackerExecutorOutputImage,
+    AnalyticsLog
+)
+
+def build_response_frame_processor(context):
+    """Frame Processor (Görüntü İşleme) için response modeli oluşturur."""
+    output_image = ProcessorOutputImage(value=context.image)
+    outputs = FrameProcessorExecutorOutputs(outputImage=output_image)
+    response = FrameProcessorExecutorResponse(outputs=outputs)
     
-    outputs_dict = {}
+    executor = FrameProcessorExecutor(value=response)
+    config_executor = ConfigExecutor(value=executor)
+    package_configs = PackageConfigs(executor=config_executor)
     
-    # FrameProcessorExecutor veya IntrusionTrackerExecutor kontrolü
-    if executor_class_name == "FrameProcessorExecutor":
-        outputs_dict = {
-            "outputImage": {
-                "name": "outputImage",
-                "value": getattr(context, "outputImage", None),
-                "type": "object"
-            }
-        }
-    elif executor_class_name == "IntrusionTrackerExecutor":
-        outputs_dict = {
-            "outputImage": {
-                "name": "outputImage",
-                "value": getattr(context, "outputImage", None),
-                "type": "object"
-            },
-            "analyticsLog": {
-                "name": "analyticsLog",
-                "value": getattr(context, "analyticsLog", ""),
-                "type": "string"
-            }
-        }
+    package = PackageHelper(packageModel=PackageModel, packageConfigs=package_configs)
+    package_model = package.build_model(context)
     
-    response_data = {
-        "outputs": outputs_dict
-    }
+    return package_model
+
+
+def build_response_intrusion_tracker(context, default_log=""):
+    """Intrusion Tracker (YOLO/Haar Cascade vb. Takip) için response modeli oluşturur."""
+    output_image = IntrusionTrackerExecutorOutputImage(value=context.image)
     
-    return response_data
+    # Eğer context içinden bir log metni dönüyorsa onu alır, yoksa varsayılan boş string atar
+    log_value = getattr(context, 'analyticsLog', default_log)
+    analytics_log = AnalyticsLog(value=log_value)
+    
+    outputs = IntrusionTrackerExecutorOutputs(outputImage=output_image, analyticsLog=analytics_log)
+    response = IntrusionTrackerExecutorResponse(outputs=outputs)
+    
+    executor = IntrusionTrackerExecutor(value=response)
+    config_executor = ConfigExecutor(value=executor)
+    package_configs = PackageConfigs(executor=config_executor)
+    
+    package = PackageHelper(packageModel=PackageModel, packageConfigs=package_configs)
+    package_model = package.build_model(context)
+    
+    return package_model
