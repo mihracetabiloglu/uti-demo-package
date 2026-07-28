@@ -16,28 +16,27 @@ from components.DemoPackage.src.models.PackageModel import (
 )
 
 def build_response_frame_processor(context):
-    output_image = ProcessorOutputImage(value=context.image)
-    outputs = FrameProcessorExecutorOutputs(outputImage=output_image)
-    response = FrameProcessorExecutorResponse(outputs=outputs)
-    executor = FrameProcessorExecutor(value=response)
-    config_executor = ConfigExecutor(value=executor)
-    package_configs = PackageConfigs(executor=config_executor)
-    package = PackageHelper(packageModel=PackageModel, packageConfigs=package_configs)
-    package_model = package.build_model(context)
+    processorOutputImage = ProcessorOutputImage(value=context.image)
+    frameProcessorExecutorOutputs = FrameProcessorExecutorOutputs(outputImage=processorOutputImage)
+    frameProcessorExecutorResponse = FrameProcessorExecutorResponse(outputs=frameProcessorExecutorOutputs)
+    frameProcessorExecutor = FrameProcessorExecutor(value=frameProcessorExecutorResponse)
+    configExecutor = ConfigExecutor(value=frameProcessorExecutor)
+    packageConfigs = PackageConfigs(executor=configExecutor)
+    package = PackageHelper(packageModel=PackageModel, packageConfigs=packageConfigs)
+    packageModel = package.build_model(context)
     
-    return package_model
+    return packageModel
 
 
-def build_response_intrusion_tracker(context, default_log=""):
-    output_image = IntrusionTrackerExecutorOutputImage(value=context.image)
-    log_value = getattr(context, 'analyticsLog', default_log)
-    analytics_log = AnalyticsLog(value=log_value)
-    outputs = IntrusionTrackerExecutorOutputs(outputImage=output_image, analyticsLog=analytics_log)
-    response = IntrusionTrackerExecutorResponse(outputs=outputs)
-    executor = IntrusionTrackerExecutor(value=response)
-    config_executor = ConfigExecutor(value=executor)
-    package_configs = PackageConfigs(executor=config_executor)
-    package = PackageHelper(packageModel=PackageModel, packageConfigs=package_configs)
-    package_model = package.build_model(context)
+def build_response_intrusion_tracker(context):
+    intrusionTrackerExecutorOutputImage = IntrusionTrackerExecutorOutputImage(value=context.image)
+    analyticsLog = AnalyticsLog(value=context.analyticsLog)
+    intrusionTrackerExecutorOutputs = IntrusionTrackerExecutorOutputs(outputImage=intrusionTrackerExecutorOutputImage, analyticsLog=analyticsLog)
+    intrusionTrackerExecutorResponse = IntrusionTrackerExecutorResponse(outputs=intrusionTrackerExecutorOutputs)
+    intrusionTrackerExecutor = IntrusionTrackerExecutor(value=intrusionTrackerExecutorResponse)
+    configExecutor = ConfigExecutor(value=intrusionTrackerExecutor)
+    packageConfigs = PackageConfigs(executor=configExecutor)
+    package = PackageHelper(packageModel=PackageModel, packageConfigs=packageConfigs)
+    packageModel = package.build_model(context)
     
-    return package_model
+    return packageModel
