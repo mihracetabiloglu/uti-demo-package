@@ -3,7 +3,7 @@ from typing import List, Union, Literal, Optional
 from sdks.novavision.src.base.model import Package, Config, Inputs, Configs, Outputs, Output, Input, Image, Request, Response
 
 class ProcessorInputImage(Input):
-    name: Literal["inputImage"] = "inputImage"
+    name: Literal["InputImage"] = "InputImage"
     value: Union[List[Image], Image]
     type: Literal["object"] = "object"
     class Config:
@@ -44,7 +44,7 @@ class FrameProcessorExecutorConfigs(Configs):
     filterType: FilterType = Field(default_factory=FilterType)
 
 class ProcessorOutputImage(Output):
-    name: Literal["outputImage"] = "outputImage"
+    name: Literal["OutputImage"] = "OutputImage"
     value: Union[List[Image], Image]
     type: Literal["object"] = "object"
     class Config:
@@ -63,7 +63,7 @@ class FrameProcessorExecutorResponse(Response):
     outputs: FrameProcessorExecutorOutputs
 
 class TrackerInputImage(Input):
-    name: Literal["inputImage"] = "inputImage"
+    name: Literal["InputImage"] = "InputImage"
     value: Union[List[Image], Image]
     type: Literal["object"] = "object"
     class Config:
@@ -113,14 +113,14 @@ class IntrusionTrackerExecutorConfigs(Configs):
     targetLabels: TargetLabels
 
 class IntrusionTrackerExecutorOutputImage(Output):
-    name: Literal["outputImage"] = "outputImage"
+    name: Literal["OutputImage"] = "OutputImage"
     value: Union[List[Image], Image]
     type: Literal["object"] = "object"
     class Config:
         title = "Output Image"
 
 class AnalyticsLog(Output):
-    name: Literal["analyticsLog"] = "analyticsLog"
+    name: Literal["AnalyticsLog"] = "AnalyticsLog"
     value: str = ""
     type: Literal["string"] = "string"
     class Config:
