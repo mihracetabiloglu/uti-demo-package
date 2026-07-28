@@ -28,7 +28,7 @@ class FrameProcessorExecutor(Component):
         filter_name = self.filter_config.get("name")
         
         if filter_name == "Gaussian":
-            k_size = self.filter_config.get("kernel_size")
+            k_size = self.filter_config.get("kernelSize")
             sigma_val = self.filter_config.get("sigma")
             
             # OpenCV Gaussian Blur uygulaması
