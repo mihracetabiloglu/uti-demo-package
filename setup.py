@@ -18,13 +18,13 @@ setuptools.setup(
     ],
 
     packages=[
-        "novavision.package",
-        "novavision.package.apps",
-        "novavision.package.resources",
-        "novavision.package.executors",
-        "novavision.package.models",
-        "novavision.package.utils"
+        "novavision.uti-demo-package",
+        "novavision.uti-demo-package.apps",
+        "novavision.uti-demo-package.resources",
+        "novavision.uti-demo-package.executors",
+        "novavision.uti-demo-package.models",
+        "novavision.uti-demo-package.utils"
     ],
-    package_dir={"novavision.package": "src"},
+    package_dir={"novavision.uti-demo-package": "src"},
     python_requires=">=3.6"
 )

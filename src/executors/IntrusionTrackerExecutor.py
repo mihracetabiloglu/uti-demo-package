@@ -7,8 +7,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../../../'))
 from sdks.novavision.src.media.image import Image
 from sdks.novavision.src.base.component import Component
 from sdks.novavision.src.helper.executor import Executor
-from components.DemoPackage.src.utils.response import build_response_intrusion_tracker
-from components.DemoPackage.src.models.PackageModel import PackageModel
+from components.UtiDemoPackage.src.utils.response import build_response_intrusion_tracker
+from components.UtiDemoPackage.src.models.PackageModel import PackageModel
 
 class IntrusionTrackerExecutor(Component):
     def __init__(self, request, bootstrap):
@@ -64,7 +64,7 @@ class IntrusionTrackerExecutor(Component):
         self.analyticsLog = log_msg
         
         # Response oluştur
-        return build_response(context=self)
+        return build_response_intrusion_tracker(context=self)
 
 
 if "__main__" == __name__:
